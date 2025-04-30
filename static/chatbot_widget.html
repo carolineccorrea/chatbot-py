@@ -1,0 +1,114 @@
+<!-- chatbot-widget.html -->
+<div id="chatbot-container">
+  <button id="chatbot-toggle" onclick="toggleChat()">💬</button>
+  <div id="chatbot-box">
+    <div id="chatbot-header">Atendente Virtual</div>
+    <div id="chatbot-messages"></div>
+    <input
+      id="chatbot-input"
+      type="text"
+      placeholder="Digite sua mensagem..."
+      onkeypress="if(event.key === 'Enter') sendMessage()"
+    />
+  </div>
+</div>
+
+<style>
+  #chatbot-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-family: sans-serif;
+    z-index: 9999;
+  }
+
+  #chatbot-toggle {
+    background: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 15px;
+    font-size: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+  }
+
+  #chatbot-box {
+    display: none;
+    flex-direction: column;
+    width: 300px;
+    height: 400px;
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px #ccc;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  #chatbot-header {
+    background: #4caf50;
+    color: white;
+    padding: 10px;
+    font-weight: bold;
+  }
+
+  #chatbot-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    height: 300px;
+    background: #f7f7f7;
+  }
+
+  #chatbot-input {
+    border: none;
+    padding: 10px;
+    width: 100%;
+    border-top: 1px solid #ccc;
+    box-sizing: border-box;
+  }
+</style>
+
+<script>
+  let sessionId = null;
+  const backendUrl = "/chat";
+
+  async function toggleChat() {
+    const box = document.getElementById("chatbot-box");
+    box.style.display = box.style.display === "flex" ? "none" : "flex";
+    if (!sessionId) await startSession();
+  }
+
+  async function startSession() {
+    const res = await fetch(backendUrl.replace("/chat", "/start-session"), { method: "POST" });
+    const data = await res.json();
+    sessionId = data.session_id;
+  }
+
+  async function sendMessage() {
+    const input = document.getElementById("chatbot-input");
+    const msg = input.value.trim();
+    if (!msg) return;
+
+    displayMessage("Você", msg);
+    input.value = "";
+
+    const res = await fetch(backendUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, message: msg }),
+    });
+
+    const data = await res.json();
+    const resposta = data.messages[data.messages.length - 1].text;
+    displayMessage("Bot", resposta);
+  }
+
+  function displayMessage(sender, text) {
+    const area = document.getElementById("chatbot-messages");
+    const div = document.createElement("div");
+    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    area.appendChild(div);
+    area.scrollTop = area.scrollHeight;
+  }
+</script>

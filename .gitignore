@@ -1,0 +1,87 @@
+# Bytecode Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos de log
+*.log
+
+# Ambiente virtual
+venv/
+.env
+.env.*
+
+# Configurações do sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Testes
+htmlcov/
+.coverage
+.tox/
+.nox/
+.pytest_cache/
+.cache/
+
+# Pacotes
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Arquivos do pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Arquivos temporários
+*.swp
+*.bak
+*.tmp
+*.orig
+*.old
+
+# Docker
+**/Dockerfile
+**/docker-compose.yml
+.docker/
+
+# VS Code Python configs
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# mypy
+.mypy_cache/
+.dmypy.json
+
+# Pyre
+.pyre/
+
+# Pytype
+.pytype/
+
+# Jupyter
+.ipynb_checkpoints
+
+# SQLite
+*.sqlite3
+
+# Coverage
+coverage.xml
+coverage/
+
+# Pydantic cache
+__pydantic__/  
+
+# Uvicorn reload temp files
+.reload/
+
+# Mongo dump/restore
+dump/
