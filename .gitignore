@@ -85,3 +85,7 @@ __pydantic__/
 
 # Mongo dump/restore
 dump/
+
+/app/rag/prompt_template.txt
+faiss_index/
+app/data/
