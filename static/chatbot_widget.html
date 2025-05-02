@@ -1,6 +1,8 @@
 <!-- static/chatbot_widget.html -->
 <div id="chatbot-container">
-  <button id="chatbot-toggle" onclick="toggleChat()">💬</button>
+  <button id="chatbot-toggle" onclick="toggleChat()">
+    <img src="/static/img/balao.svg" alt="Abrir chatbot" />
+  </button>
   <div id="chatbot-box">
     <div id="chatbot-header">Atendente Virtual</div>
     <div id="chatbot-messages"></div>
@@ -23,14 +25,20 @@
   }
 
   #chatbot-toggle {
-    background: #4caf50;
-    color: white;
+    background: transparent;
     border: none;
-    border-radius: 50%;
-    padding: 15px;
-    font-size: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 0;
     cursor: pointer;
+  }
+
+  #chatbot-toggle img {
+    width: 60px;
+    height: 60px;
+    transition: transform 0.3s ease;
+  }
+
+  #chatbot-toggle img:hover {
+    transform: scale(1.1);
   }
 
   #chatbot-box {
@@ -43,6 +51,7 @@
     box-shadow: 0 0 10px #ccc;
     border-radius: 8px;
     overflow: hidden;
+    margin-top: 10px;
   }
 
   #chatbot-header {
@@ -77,8 +86,6 @@
   let sessionId = null;
   const backendUrl = "/chat";
   const apiKey = window.env?.API_KEY || "";
-
-  console.log("🔐 API Key carregada do env.js:", apiKey);
 
   if (!apiKey) {
     alert("⚠️ API Key não carregada. Verifique o arquivo env.js.");
