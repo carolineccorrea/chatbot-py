@@ -1,37 +1,30 @@
-from fastapi import APIRouter, Request
-from app.models.models import ChatRequest, ChatResponse
+from fastapi import APIRouter, Request, HTTPException
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from app.controllers.chat_controller import handle_chat, handle_start_session
+from app.models.models import ChatRequest
 from fastapi.responses import HTMLResponse
+from dotenv import load_dotenv
 import os
+load_dotenv()
+
+limiter = Limiter(key_func=get_remote_address)
 
 router = APIRouter()
-
-from app.controllers.chat_controller import (
-    handle_chat,
-    handle_start_session,
-    handle_webhook
-)
-
-router = APIRouter()
-
-@router.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest):
-    return await handle_chat(req)
 
 @router.post("/start-session")
-async def start_session():
+@limiter.limit("10/minute")
+async def start_session(request: Request):
     return await handle_start_session()
 
-@router.post("/webhook")
-async def webhook(request: Request):
-    body = await request.json()
-    return await handle_webhook(body)
+@router.post("/chat")
+@limiter.limit("10/minute")
+async def chat_endpoint(request: Request, req: ChatRequest):
+    client_ip = request.client.host
+    return await handle_chat(req, client_ip)
 
 @router.get("/widget", response_class=HTMLResponse)
 async def get_chat_widget():
-    # Resolve o caminho relativo à raiz do projeto
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    file_path = os.path.join(base_dir, "static", "chatbot_widget.html")
-
-    with open(file_path, "r", encoding="utf-8") as f:
-        html = f.read()
-    return HTMLResponse(content=html, status_code=200)
+    file_path = os.path.join("static", "chatbot_widget.html")
+    with open(file_path, "r", encoding="utf-8") as file:
+        return file.read()

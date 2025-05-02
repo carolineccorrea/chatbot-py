@@ -3,8 +3,8 @@ from app.services.chat_service import ChatService
 
 chat_service = ChatService()
 
-async def handle_chat(req: ChatRequest) -> ChatResponse:
-    return await chat_service.process_chat(req)
+async def handle_chat(req: ChatRequest, client_ip: str) -> ChatResponse:
+    return await chat_service.process_chat(req, client_ip)
 
 async def handle_start_session():
     import uuid

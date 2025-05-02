@@ -1,4 +1,4 @@
-<!-- chatbot-widget.html -->
+<!-- static/chatbot_widget.html -->
 <div id="chatbot-container">
   <button id="chatbot-toggle" onclick="toggleChat()">💬</button>
   <div id="chatbot-box">
@@ -58,6 +58,7 @@
     overflow-y: auto;
     height: 300px;
     background: #f7f7f7;
+    font-size: 14px;
   }
 
   #chatbot-input {
@@ -69,9 +70,19 @@
   }
 </style>
 
+<!-- ⚙️ Carrega chave da API via env.js -->
+<script src="env.js"></script>
+
 <script>
   let sessionId = null;
   const backendUrl = "/chat";
+  const apiKey = window.env?.API_KEY || "";
+
+  console.log("🔐 API Key carregada do env.js:", apiKey);
+
+  if (!apiKey) {
+    alert("⚠️ API Key não carregada. Verifique o arquivo env.js.");
+  }
 
   async function toggleChat() {
     const box = document.getElementById("chatbot-box");
@@ -80,9 +91,16 @@
   }
 
   async function startSession() {
-    const res = await fetch(backendUrl.replace("/chat", "/start-session"), { method: "POST" });
-    const data = await res.json();
-    sessionId = data.session_id;
+    try {
+      const res = await fetch("/start-session", {
+        method: "POST",
+        headers: { "x-api-key": apiKey }
+      });
+      const data = await res.json();
+      sessionId = data.session_id;
+    } catch (error) {
+      displayMessage("Bot", "Erro ao iniciar sessão. Verifique a chave da API.");
+    }
   }
 
   async function sendMessage() {
@@ -93,15 +111,27 @@
     displayMessage("Você", msg);
     input.value = "";
 
-    const res = await fetch(backendUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId, message: msg }),
-    });
+    try {
+      const res = await fetch(backendUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey
+        },
+        body: JSON.stringify({ session_id: sessionId, message: msg })
+      });
 
-    const data = await res.json();
-    const resposta = data.messages[data.messages.length - 1].text;
-    displayMessage("Bot", resposta);
+      if (!res.ok) {
+        throw new Error("Não autorizado ou erro no servidor");
+      }
+
+      const data = await res.json();
+      const resposta = data.messages[data.messages.length - 1].text;
+      displayMessage("Bot", resposta);
+    } catch (error) {
+      displayMessage("Bot", "❌ Erro ao enviar mensagem");
+      console.error("Erro ao enviar para /chat:", error);
+    }
   }
 
   function displayMessage(sender, text) {
