@@ -20,10 +20,10 @@ class ChatService:
         """
         Processa uma mensagem de chat:
          1. Log da recepção
-         2. Busca histórico
+         2. Busca histórico no banco
          3. Conta apenas mensagens de 'user'
          4. Se >= limite, loga e retorna fallback NO FINAL do histórico
-         5. Senão, registra a mensagem, chama RAG, registra resposta e retorna histórico atualizado
+         5. Senão, registra a mensagem, chama LLMChain via prompt, registra resposta e retorna histórico atualizado
         """
         # 1) Log de recepção
         print(f"📥 [{client_ip}] -> {req.message}")
@@ -55,13 +55,13 @@ class ChatService:
         # 5) Registra a nova mensagem do usuário
         await add_message(req.session_id, "user", req.message)
 
-        # 6) Gera a resposta via RAG
+        # 6) Gera a resposta via prompt + LLMChain
         try:
             rag_result = ask_with_context(req.message, req.session_id)
             bot_response = rag_result["answer"]
         except Exception as e:
-            print("❌ Erro RAG:", e)
-            bot_response = "Desculpe, ocorreu um erro ao consultar a base de conhecimento."
+            print("❌ Erro LLMChain:", e)
+            bot_response = "Desculpe, ocorreu um erro ao processar sua solicitação."
 
         # 7) Registra a resposta do bot
         await add_message(req.session_id, "bot", bot_response)
