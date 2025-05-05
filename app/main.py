@@ -10,8 +10,6 @@ from app.router import router
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI()
-
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY")
@@ -26,7 +24,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 # CORS restrito ao domínio do seu site
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://carolinecorrea.dev", "http://localhost:8000"],  # adicione localhost para testes locais
+    allow_origins=["https://carolinecorrea.dev", "http://localhost:8000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,3 +53,10 @@ async def verify_api_key(request: Request, call_next):
 
 # Inclui todas as rotas
 app.include_router(router)
+
+# Adicione este bloco para rodar o app corretamente no Cloud Run
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.environ.get("PORT", 8080))  # Cloud Run exige que PORT venha da env
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
