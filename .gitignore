@@ -47,10 +47,6 @@ pip-delete-this-directory.txt
 *.orig
 *.old
 
-# Docker
-**/Dockerfile
-**/docker-compose.yml
-.docker/
 
 # VS Code Python configs
 .vscode/settings.json
