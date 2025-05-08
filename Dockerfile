@@ -1,16 +1,30 @@
-FROM python:3.10-slim
+# Use a slim Python base image
+FROM python:3.13-slim
 
-# Cria diretório app
+# Prevent interactive prompts during package installs
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system packages required to build faiss-cpu
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    swig \
+    build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+# Create and set the working directory
 WORKDIR /app
 
-# Copia arquivos
-COPY . .
+# Copy only requirements.txt first to leverage Docker layer cache
+COPY requirements.txt .
 
-# Instala dependências
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Define a porta do app
+# Copy rest of the application code
+COPY . .
+
+# Expose the application port
 ENV PORT=8080
 
-# Comando para rodar o app (ex: main.py com app.run(host='0.0.0.0'))
+# Default command to run the application
 CMD ["python", "main.py"]
