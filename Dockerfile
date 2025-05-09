@@ -1,30 +1,36 @@
 # Use a slim Python base image
 FROM python:3.13-slim
 
-# Prevent interactive prompts during package installs
+# Evita prompts interativos durante instalações
 ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
 
-# Install system packages required to build faiss-cpu
+# Instala dependências do sistema para compilar faiss-cpu
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    swig \
     build-essential \
+    cmake \
+    swig \
+    libopenblas-dev \
+    liblapack-dev \
+    python3-dev \
  && rm -rf /var/lib/apt/lists/*
 
-# Create and set the working directory
+# Cria e define o diretório de trabalho
 WORKDIR /app
 
-# Copy only requirements.txt first to leverage Docker layer cache
+# Copia só o requirements para aproveitar cache
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Atualiza pip e instala dependências Python
+RUN pip install --upgrade pip \
+ && pip install --no-cache-dir -r requirements.txt
 
-# Copy rest of the application code
+# Copia o restante do código da aplicação
 COPY . .
 
-# Expose the application port
+# Expõe a porta usada pelo app
 ENV PORT=8080
 
-# Default command to run the application
+# Comando padrão de inicialização
 CMD ["python", "main.py"]
