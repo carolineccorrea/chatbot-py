@@ -1,36 +1,30 @@
-# Use a slim Python base image
+# Use um slim Python base image
 FROM python:3.13-slim
 
-# Evita prompts interativos durante instalações
+# Evita prompts interativos
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
 
-# Instala dependências do sistema para compilar faiss-cpu
+# Instala os pré-requisitos de build + Faiss headers
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
-    build-essential \
-    cmake \
     swig \
+    build-essential \
+    libfaiss-dev \
     libopenblas-dev \
-    liblapack-dev \
-    python3-dev \
  && rm -rf /var/lib/apt/lists/*
 
-# Cria e define o diretório de trabalho
+# Cria e define diretório de trabalho
 WORKDIR /app
 
-# Copia só o requirements para aproveitar cache
+# Copia o requirements e instala dependências Python
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Atualiza pip e instala dependências Python
-RUN pip install --upgrade pip \
- && pip install --no-cache-dir -r requirements.txt
-
-# Copia o restante do código da aplicação
+# Copia o restante da aplicação
 COPY . .
 
-# Expõe a porta usada pelo app
+# Expõe a porta usada pelo FastAPI/uvicorn
 ENV PORT=8080
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
 
-# Comando padrão de inicialização
-CMD ["python", "main.py"]
+#CMD ["python", "main.py"]
