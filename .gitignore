@@ -86,3 +86,5 @@ faiss_index/
 app/data/
 /env.js
 env.js
+
+Dockerfile
