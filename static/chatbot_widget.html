@@ -1,151 +1,189 @@
 <!-- static/chatbot_widget.html -->
-<div id="chatbot-container">
-  <button id="chatbot-toggle" onclick="toggleChat()">
-    <img src="/static/img/balao.svg" alt="Abrir chatbot" />
-  </button>
-  <div id="chatbot-box">
-    <div id="chatbot-header">Atendente Virtual</div>
-    <div id="chatbot-messages"></div>
-    <input
-      id="chatbot-input"
-      type="text"
-      placeholder="Digite sua mensagem..."
-      onkeypress="if(event.key === 'Enter') sendMessage()"
-    />
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chatbot Widget</title>
+  <link rel="stylesheet" href="/static/chatbot_widget.css" />
+</head>
+<body>
+  <div id="chatbot-container">
+    <button id="chatbot-toggle" onclick="toggleChat()">
+      <div class="chat-icon-bubble">
+        <!-- SVG INLINE: mantém exatamente seu robô original e o fundo amarelo -->
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 197.60004 95">
+          <style>
+            @keyframes robotMoves {
+              from { transform: translateY(0px); }
+              to   { transform: translateY(10px); }
+            }
+            @keyframes eyesBlink {
+              10% { transform: scaleY(1); }
+              11%,12% { transform: scaleY(0); }
+              13% { transform: scaleY(1); }
+            }
+            @keyframes eyesMoves {
+              10% { transform: translateX(0px); }
+              13% { transform: translateX(-16px); }
+              30% { transform: translateX(-16px); }
+              33% { transform: translateX(16px); }
+              45% { transform: translateX(16px); }
+              47% { transform: translateX(0px); }
+            }
+            @keyframes antennaMoves {
+              10% { transform: translateX(0px); }
+              13% { transform: translateX(2px); }
+              30% { transform: translateX(2px); }
+              33% { transform: translateX(-20px); }
+              45% { transform: translateX(-20px); }
+              47% { transform: translateX(0px); }
+            }
+
+            .robot {
+              animation: robotMoves 2s ease-in-out alternate infinite;
+            }
+            .robot-eyes > circle {
+              transform-box: fill-box;
+              transform-origin: center center;
+              animation: eyesBlink 2s linear alternate infinite;
+            }
+            .robot:hover .robot-eyes {
+              animation: eyesMoves 5s linear alternate infinite;
+            }
+            .robot:hover .robot-antenna {
+              animation: antennaMoves 5s linear alternate infinite;
+            }
+            .robot:hover {
+              animation-play-state: paused;
+            }
+          </style>
+
+          <!-- Fundo amarelo pastel -->
+          <rect x="0" y="0" width="197.60004" height="95" fill="#FFECB3" />
+
+          <g class="robot">
+            <g class="robot-head">
+              <g class="robot-antenna">
+                <path
+                  d="M119.6762,25.81128a1.8565,1.8565,0,1,0-2.303,1.8014l-.289,22.7315h1.406l-.289-22.7153A1.857,1.857,0,0,0,119.6762,25.81128Z"
+                  transform="translate(-12.7582 -15.21742)"
+                />
+                <path
+                  d="M127.4112,43.90428a4.18571,4.18571,0,0,1-4.174,4.1738H112.3447a4.16752,4.16752,0,0,1-3.1335-6.9236c.0595-.0676.1216-.1342.1856-.1982a4.16164,4.16164,0,0,1,2.9479-1.2258h10.8925a4.18535,4.18535,0,0,1,4.154,3.764C127.4042,43.62958,127.4112,43.76648,127.4112,43.90428Z"
+                  transform="translate(-12.7582 -15.21742)"
+                  fill="#34345b"
+                />
+                <path
+                  d="M127.4112,43.90428a4.18571,4.18571,0,0,1-4.174,4.1738H112.3447a4.16848,4.16848,0,0,1-3.1335-6.9236,1.787,1.787,0,0,0,.2765,1.2636c.399.5405,1.098.6332,2.5219.7206,2.4376.1495,4.0356.1009,6.1246.0901,3.212-.0163,4.819-.0244,4.954,0a1.90305,1.90305,0,0,0,.72,0,2.56146,2.56146,0,0,0,1.351-.9007,2.73937,2.73937,0,0,0,.486-1.8284A4.17742,4.17742,0,0,1,127.4112,43.90428Z"
+                  transform="translate(-12.7582 -15.21742)"
+                  fill="#34345b"
+                  fill-opacity="0.6"
+                />
+                <path
+                  d="M127.4112,43.90428a4.18571,4.18571,0,0,1-4.174,4.1738H112.3447a4.17441,4.17441,0,0,1-4.1242-4.816c1.0186.0504,2.2355.1036,3.609.1468.553.0171,2.1787.0666,4.5037.0901,2.024.0207,3.225.0081,5.224,0,1.45-.0063,3.43-.0108,5.834-.0045C127.4042,43.62958,127.4112,43.76648,127.4112,43.90428Z"
+                  transform="translate(-12.7582 -15.21742)"
+                  fill="#d33d3d"
+                />
+              </g>
+              <path
+                d="M144.6142,64.39218v10.2624a20.62147,20.62147,0,0,1-20.561,20.5617H82.1321a20.62162,20.62162,0,0,1-20.5605-20.5617V64.39218a20.62093,20.62093,0,0,1,20.5605-20.5609h41.9211A20.62078,20.62078,0,0,1,144.6142,64.39218Z"
+                transform="translate(-12.7582 -15.21742)"
+                fill="#fff"
+              />
+              <path
+                d="M144.6142,64.39218v10.2624a20.62147,20.62147,0,0,1-20.561,20.5617H82.1321a20.62162,20.62162,0,0,1-20.5605-20.5617v-3.3902a35.9644,35.9644,0,0,0,2.3418,6.9109c1.4114,3.0849,3.6952,7.91171,8.8264,11.0785,4.924,3.0389,9.9535,2.9947,13.0599,2.97221,11.9593-.08641,17.1932.70169,35.8475-.1801a15.01758,15.01758,0,0,0,3.783-.6305,17.3328,17.3328,0,0,0,5.314-2.88221c4.944-4.0909,4.881-14.8568,4.863-18.0137-.041-7.1154-.079-13.4724-4.593-18.6442-2.474-2.8344-5.177-4.0341-9.277-5.8544a51.73249,51.73249,0,0,0-5.872-2.1896h8.188A20.62078,20.62078,0,0,1,144.6142,64.39218Z"
+                transform="translate(-12.7582 -15.21742)"
+                fill="#c0c0c7"
+              />
+              <g class="robot-eyes">
+                <rect x="68" y="51" width="45" height="20" rx="10" fill="#34345B"/>
+                <circle cx="79" cy="61.15167" r="3" fill="#6bd9c8"/>
+                <circle cx="102" cy="61.15167" r="3" fill="#6bd9c8"/>
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </button>
+
+    <div id="chatbot-box">
+      <div id="chatbot-header">Atendente Virtual</div>
+      <div id="chatbot-messages"></div>
+      <input
+        id="chatbot-input"
+        type="text"
+        placeholder="Digite sua mensagem..."
+        onkeypress="if(event.key === 'Enter') sendMessage()"
+      />
+    </div>
   </div>
-</div>
 
-<style>
-  #chatbot-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    font-family: sans-serif;
-    z-index: 9999;
-  }
+  <script src="env.js"></script>
+  <script>
+    let sessionId = null;
+    const backendUrl = "/chat";
+    const apiKey = window.env?.API_KEY || "";
 
-  #chatbot-toggle {
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-
-  #chatbot-toggle img {
-    width: 60px;
-    height: 60px;
-    transition: transform 0.3s ease;
-  }
-
-  #chatbot-toggle img:hover {
-    transform: scale(1.1);
-  }
-
-  #chatbot-box {
-    display: none;
-    flex-direction: column;
-    width: 300px;
-    height: 400px;
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 10px;
-  }
-
-  #chatbot-header {
-    background: #4caf50;
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-  }
-
-  #chatbot-messages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    height: 300px;
-    background: #f7f7f7;
-    font-size: 14px;
-  }
-
-  #chatbot-input {
-    border: none;
-    padding: 10px;
-    width: 100%;
-    border-top: 1px solid #ccc;
-    box-sizing: border-box;
-  }
-</style>
-
-<!-- ⚙️ Carrega chave da API via env.js -->
-<script src="env.js"></script>
-
-<script>
-  let sessionId = null;
-  const backendUrl = "/chat";
-  const apiKey = window.env?.API_KEY || "";
-
-  if (!apiKey) {
-    alert("⚠️ API Key não carregada. Verifique o arquivo env.js.");
-  }
-
-  async function toggleChat() {
-    const box = document.getElementById("chatbot-box");
-    box.style.display = box.style.display === "flex" ? "none" : "flex";
-    if (!sessionId) await startSession();
-  }
-
-  async function startSession() {
-    try {
-      const res = await fetch("/start-session", {
-        method: "POST",
-        headers: { "x-api-key": apiKey }
-      });
-      const data = await res.json();
-      sessionId = data.session_id;
-    } catch (error) {
-      displayMessage("Bot", "Erro ao iniciar sessão. Verifique a chave da API.");
+    if (!apiKey) {
+      alert("⚠️ API Key não carregada. Verifique o arquivo env.js.");
     }
-  }
 
-  async function sendMessage() {
-    const input = document.getElementById("chatbot-input");
-    const msg = input.value.trim();
-    if (!msg) return;
+    async function toggleChat() {
+      const box = document.getElementById("chatbot-box");
+      box.style.display = box.style.display === "flex" ? "none" : "flex";
+      if (!sessionId) await startSession();
+    }
 
-    displayMessage("Você", msg);
-    input.value = "";
-
-    try {
-      const res = await fetch(backendUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey
-        },
-        body: JSON.stringify({ session_id: sessionId, message: msg })
-      });
-
-      if (!res.ok) {
-        throw new Error("Não autorizado ou erro no servidor");
+    async function startSession() {
+      try {
+        const res = await fetch("/start-session", {
+          method: "POST",
+          headers: { "x-api-key": apiKey }
+        });
+        const data = await res.json();
+        sessionId = data.session_id;
+      } catch (error) {
+        displayMessage("Bot", "Erro ao iniciar sessão. Verifique a chave da API.");
       }
-
-      const data = await res.json();
-      const resposta = data.messages[data.messages.length - 1].text;
-      displayMessage("Bot", resposta);
-    } catch (error) {
-      displayMessage("Bot", "❌ Erro ao enviar mensagem");
-      console.error("Erro ao enviar para /chat:", error);
     }
-  }
 
-  function displayMessage(sender, text) {
-    const area = document.getElementById("chatbot-messages");
-    const div = document.createElement("div");
-    div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-    area.appendChild(div);
-    area.scrollTop = area.scrollHeight;
-  }
-</script>
+    async function sendMessage() {
+      const input = document.getElementById("chatbot-input");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      displayMessage("Você", msg);
+      input.value = "";
+
+      try {
+        const res = await fetch(backendUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey
+          },
+          body: JSON.stringify({ session_id: sessionId, message: msg })
+        });
+
+        if (!res.ok) throw new Error("Erro no servidor");
+
+        const data = await res.json();
+        const resposta = data.messages.at(-1).text;
+        displayMessage("Bot", resposta);
+      } catch (error) {
+        displayMessage("Bot", "❌ Erro ao enviar mensagem");
+        console.error(error);
+      }
+    }
+
+    function displayMessage(sender, text) {
+      const area = document.getElementById("chatbot-messages");
+      const div = document.createElement("div");
+      div.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      area.appendChild(div);
+      area.scrollTop = area.scrollHeight;
+    }
+  </script>
+</body>
+</html>
