@@ -1,24 +1,33 @@
 # Dockerfile
 
-# 1) Escolhe uma imagem Python slim
+# 1) Imagem base Python slim
 FROM python:3.13-slim
 
-# 2) Evita prompts interativos de apt
+# 2) Variáveis de ambiente
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PORT=8080
 
 WORKDIR /app
 
-# 3) Copia requirements e instala dependências
+# 3) Instala ferramentas de compilação + BLAS para NumPy
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    gfortran \
+    libopenblas-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+# 4) Copia e instala as libs Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4) Copia o restante da aplicação
+# 5) Copia o código da aplicação
 COPY . .
 
-# 5) Expõe a porta que o Uvicorn vai usar
+# 6) Expõe a porta para o Cloud Run
 EXPOSE 8080
 
-# 6) Comando padrão para iniciar sua API FastAPI
+# 7) Inicia o servidor Uvicorn
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
