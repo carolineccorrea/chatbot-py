@@ -1,30 +1,24 @@
-# Use um slim Python base image
+# Dockerfile
+
+# 1) Escolhe uma imagem Python slim
 FROM python:3.13-slim
 
-# Evita prompts interativos
-ENV DEBIAN_FRONTEND=noninteractive
+# 2) Evita prompts interativos de apt
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
 
-# Instala os pré-requisitos de build + Faiss headers
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-    swig \
-    build-essential \
-    libfaiss-dev \
-    libopenblas-dev \
- && rm -rf /var/lib/apt/lists/*
-
-# Cria e define diretório de trabalho
 WORKDIR /app
 
-# Copia o requirements e instala dependências Python
+# 3) Copia requirements e instala dependências
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o restante da aplicação
+# 4) Copia o restante da aplicação
 COPY . .
 
-# Expõe a porta usada pelo FastAPI/uvicorn
-ENV PORT=8080
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# 5) Expõe a porta que o Uvicorn vai usar
+EXPOSE 8080
 
-#CMD ["python", "main.py"]
+# 6) Comando padrão para iniciar sua API FastAPI
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
