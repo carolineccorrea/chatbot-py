@@ -47,7 +47,7 @@
   width: 180%;                    /* robô ocupa 80% do balão */
   height: 180%;
   padding-top: 65px;
-  padding-left: 10px;
+  padding-left: 20px;
   display: block;
   pointer-events: none;          /* permite clique passar para o botão */
 }
@@ -94,4 +94,14 @@
   width: 100%;
   border-top: 1px solid #ccc;
   box-sizing: border-box;
+}
+
+
+/* Aumenta a cabeça do robô em 20% */
+.chat-icon-bubble svg g.robot {
+  /* garante que o ponto de origem seja o centro do desenho */
+  transform-box: fill-box !important;
+  transform-origin: 50% 60% !important;
+  /* escala em 1.2 (20% maior) */
+  transform: scale(1.5) !important;
 }
