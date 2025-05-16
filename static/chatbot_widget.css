@@ -1,0 +1,97 @@
+/* container fixo no canto */
+#chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  font-family: sans-serif;
+  z-index: 9999;
+}
+
+/* botão */
+#chatbot-toggle {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* balão em CSS */
+.chat-icon-bubble {
+  width: 100px;
+  height: 80px;
+  background: #FFECB3;           /* amarelo pastel */
+  border-radius: 20px;           /* cantos arredondados */
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+.chat-icon-bubble:hover {
+  transform: scale(1.1);
+}
+
+/* “rabo” do balão */
+.chat-icon-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;                 /* posiciona abaixo */
+  left: 30px;                    /* centraliza aprox. */
+  border-width: 10px 8px 0 8px;
+  border-style: solid;
+  border-color: #FFECB3 transparent transparent transparent;
+}
+
+/* SVG do robô dentro do balão aumentado */
+.chat-icon-bubble object {
+  width: 180%;                    /* robô ocupa 80% do balão */
+  height: 180%;
+  padding-top: 65px;
+  padding-left: 10px;
+  display: block;
+  pointer-events: none;          /* permite clique passar para o botão */
+}
+.chat-icon-bubble img {
+  display: none;                 /* fallback escondido */
+  pointer-events: none;
+}
+
+/* caixa de chat */
+#chatbot-box {
+  display: none;
+  flex-direction: column;
+  width: 300px;
+  height: 400px;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 10px #ccc;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+/* header */
+#chatbot-header {
+  background: #4caf50;
+  color: white;
+  padding: 10px;
+  font-weight: bold;
+}
+
+/* mensagens */
+#chatbot-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background: #f7f7f7;
+  font-size: 14px;
+}
+
+/* input */
+#chatbot-input {
+  border: none;
+  padding: 10px;
+  width: 100%;
+  border-top: 1px solid #ccc;
+  box-sizing: border-box;
+}

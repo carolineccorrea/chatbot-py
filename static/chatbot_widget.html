@@ -1,7 +1,17 @@
-<!-- static/chatbot_widget.html -->
+<link rel="stylesheet" href="/static/chatbot_widget.css">
+
 <div id="chatbot-container">
   <button id="chatbot-toggle" onclick="toggleChat()">
-    <img src="/static/img/balao.svg" alt="Abrir chatbot" />
+    <div class="chat-icon-bubble">
+      <object
+        id="chatbot-icon"
+        type="image/svg+xml"
+        data="/static/img/balao4.svg"
+        aria-label="Abrir chatbot">
+        <!-- fallback -->
+        <img src="/static/img/balao4.svg" alt="Abrir chatbot" />
+      </object>
+    </div>
   </button>
   <div id="chatbot-box">
     <div id="chatbot-header">Atendente Virtual</div>
@@ -15,73 +25,7 @@
   </div>
 </div>
 
-<style>
-  #chatbot-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    font-family: sans-serif;
-    z-index: 9999;
-  }
-
-  #chatbot-toggle {
-    background: transparent;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-  }
-
-  #chatbot-toggle img {
-    width: 60px;
-    height: 60px;
-    transition: transform 0.3s ease;
-  }
-
-  #chatbot-toggle img:hover {
-    transform: scale(1.1);
-  }
-
-  #chatbot-box {
-    display: none;
-    flex-direction: column;
-    width: 300px;
-    height: 400px;
-    background: white;
-    border: 1px solid #ccc;
-    box-shadow: 0 0 10px #ccc;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 10px;
-  }
-
-  #chatbot-header {
-    background: #4caf50;
-    color: white;
-    padding: 10px;
-    font-weight: bold;
-  }
-
-  #chatbot-messages {
-    flex: 1;
-    padding: 10px;
-    overflow-y: auto;
-    height: 300px;
-    background: #f7f7f7;
-    font-size: 14px;
-  }
-
-  #chatbot-input {
-    border: none;
-    padding: 10px;
-    width: 100%;
-    border-top: 1px solid #ccc;
-    box-sizing: border-box;
-  }
-</style>
-
-<!-- ⚙️ Carrega chave da API via env.js -->
 <script src="env.js"></script>
-
 <script>
   let sessionId = null;
   const backendUrl = "/chat";
@@ -128,16 +72,14 @@
         body: JSON.stringify({ session_id: sessionId, message: msg })
       });
 
-      if (!res.ok) {
-        throw new Error("Não autorizado ou erro no servidor");
-      }
+      if (!res.ok) throw new Error("Erro no servidor");
 
       const data = await res.json();
-      const resposta = data.messages[data.messages.length - 1].text;
+      const resposta = data.messages.at(-1).text;
       displayMessage("Bot", resposta);
     } catch (error) {
       displayMessage("Bot", "❌ Erro ao enviar mensagem");
-      console.error("Erro ao enviar para /chat:", error);
+      console.error(error);
     }
   }
 
