@@ -1,5 +1,5 @@
-from app.models.models import ChatRequest, ChatResponse
-from app.services.chat_service import ChatService
+from src.models.models import ChatRequest, ChatResponse
+from src.services.chat_service import ChatService
 
 chat_service = ChatService()
 

@@ -1,9 +1,9 @@
-# app/services/chat_service.py
+# src/services/chat_service.py
 
 from datetime import datetime
-from app.models.models import ChatRequest, ChatResponse, Message
-from app.repositories.chat_repository import create_session, add_message, get_session_messages
-from app.rag.rag_pipeline import ask_with_context
+from src.models.models import ChatRequest, ChatResponse, Message
+from src.repositories.chat_repository import create_session, add_message, get_session_messages
+from src.rag.rag_pipeline import ask_with_context
 
 # Número máximo de mensagens enviadas pelo usuário por sessão
 MAX_USER_MESSAGES_PER_SESSION = 10

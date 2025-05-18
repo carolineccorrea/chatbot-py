@@ -1,4 +1,4 @@
-from app.db.mongo.db_config import mongo_db
+from src.db.mongo.db_config import mongo_db
 from datetime import datetime
 
 async def create_session(session_id: str):

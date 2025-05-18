@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.middleware import SlowAPIMiddleware
-from app.router import router
+from src.router import router
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.controllers.chat_controller import handle_chat, handle_start_session
-from app.models.models import ChatRequest
+from src.controllers.chat_controller import handle_chat, handle_start_session
+from src.models.models import ChatRequest
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 import os
