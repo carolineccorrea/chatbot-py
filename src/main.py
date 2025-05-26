@@ -1,62 +1,91 @@
+# src/main.py
+
 import os
 import logging
-from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter
-from slowapi.util import get_remote_address
-from slowapi.middleware import SlowAPIMiddleware
-from src.router import router
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from src.infra.db.mongo.db_config import client, mongo_db, MONGO_URI, DB_NAME
+from src.registry import load_adapters
+from src.infra.repositories.mongo_session_repository import MongoSessionRepository
+from src.domain.usecases.create_session_use_case import CreateSessionUseCase
+from src.domain.usecases.process_chat_use_case import ProcessChatUseCase
+from src.api.controllers.chat_controller import router as chat_router
 
-load_dotenv()
-
-API_KEY = os.getenv("API_KEY")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
+app.include_router(chat_router, prefix="/api")
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# Log de conexão com MongoDB na inicialização
+@app.on_event("startup")
+async def startup_db():
+    try:
+        # Força a conexão
+        await client.server_info()
+        logger.info(f"🔗 Conectado ao MongoDB em {MONGO_URI}, banco: {DB_NAME}")
+    except Exception as e:
+        logger.error(f"❌ Falha ao conectar no MongoDB: {e}")
 
-# Logging básico
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+@app.on_event("shutdown")
+async def shutdown_db():
+    client.close()
+    logger.info("🔒 Conexão com MongoDB encerrada")
 
-# CORS restrito ao domínio do seu site
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://carolinecorrea.dev", "http://localhost:8000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Carrega adapters dinamicamente
+adapters   = load_adapters()
+repository = MongoSessionRepository()
+create_uc  = CreateSessionUseCase(repository)
+process_uc = ProcessChatUseCase(repository)
 
-# Rate limiting por IP
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_middleware(SlowAPIMiddleware)
+@app.post("/api/webhook/{channel}")
+async def universal_webhook(channel: str, request: Request):
+    if channel not in adapters:
+        return {"error": "canal não suportado"}, 400
 
-@app.get("/env.js")
-def get_env_js():
-    return FileResponse("env.js", media_type="application/javascript")
+    payload = await request.json()
+    adapter = adapters[channel]
 
-# Middleware para proteger apenas as rotas sensíveis com API Key
-@app.middleware("http")
-async def verify_api_key(request: Request, call_next):
-    protected_paths = ["/chat", "/start-session"]
+    msg = await adapter.parse_request(payload)
+    company_id = msg.metadata.get("company_id")
+    session_id = msg.metadata.get("session_id")
 
-    if any(request.url.path.startswith(path) for path in protected_paths):
-        api_key = request.headers.get("x-api-key")
-        if api_key != API_KEY:
-            raise HTTPException(status_code=401, detail="Acesso não autorizado.")
+    if not (company_id and session_id):
+        return {"error": "metadata missing company_id or session_id"}, 400
 
-    return await call_next(request)
+    await create_uc.execute(company_id, session_id)
+    history = await process_uc.execute(company_id, session_id, msg)
 
-# Inclui todas as rotas
-app.include_router(router)
+    last_bot = [m for m in history if m.sender == "bot"][-1]
+    await adapter.send_response(msg, last_bot.text)
 
-# Adicione este bloco para rodar o app corretamente no Cloud Run
-if __name__ == "__main__":
-    import uvicorn
+    # Log de operação
+    logger.info(
+        f"📬 [{channel}] company={company_id} session={session_id} "
+        f"messages={len(history)}"
+    )
+    return {"status": "ok"}
 
-    port = int(os.environ.get("PORT", 8080))  # Cloud Run exige que PORT venha da env
-    uvicorn.run("main:app", host="0.0.0.0", port=port)
+@app.websocket("/ws/{company_id}/{session_id}/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, company_id: str, session_id: str, user_id: str):
+    await websocket.accept()
+    adapter = adapters["webchat"]
+    adapter.connections[user_id] = websocket
+
+    try:
+        while True:
+            data = await websocket.receive_json()
+            data.setdefault("metadata", {}).update({
+                "company_id": company_id,
+                "session_id": session_id
+            })
+            msg = await adapter.parse_request(data)
+            history = await process_uc.execute(company_id, session_id, msg)
+            last_bot = [m for m in history if m.sender == "bot"][-1]
+            await adapter.send_response(msg, last_bot.text)
+            logger.info(
+                f"🕸️ [websocket] company={company_id} session={session_id} "
+                f"user={user_id} text={msg.text}"
+            )
+    except WebSocketDisconnect:
+        adapter.connections.pop(user_id, None)
+        logger.info(f"🚪 WebSocket desconectado: {user_id}")
