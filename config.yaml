@@ -1,0 +1,7 @@
+# config.yaml
+
+# config.yaml
+
+channels:
+  telegram: src.adapters.telegram_adapter
+  webchat:  src.adapters.webchat_adapter
