@@ -107,27 +107,29 @@
       </div>
     </button>
 
-    <div id="chatbot-box">
+    <div id="chatbot-box" style="display:none; flex-direction:column; height:400px; width:300px;">
       <div id="chatbot-header">Atendente Virtual</div>
-      <div id="chatbot-messages"></div>
+      <div id="chatbot-messages" style="flex:1; overflow-y:auto; padding:10px;"></div>
       <input
         id="chatbot-input"
         type="text"
         placeholder="Digite sua mensagem..."
-        onkeypress="if(event.key === 'Enter') sendMessage()"
+        onkeypress="if(event.key==='Enter') sendMessage()"
+        style="border:1px solid #ccc; padding:8px; width:calc(100% - 16px);"
       />
     </div>
   </div>
 
-  <script src="env.js"></script>
+  <script src="/static/env.js"></script>
   <script>
-    let sessionId = null;
-    const backendUrl = "/chat";
-    const apiKey = window.env?.API_KEY || "";
+    // Configurações
+    const companyId   = "chatbotAskDev";
+    const userId      = crypto.randomUUID();
+    const startUrl    = "/api/start-session";
+    const chatUrl     = "/api/chat";
+    const apiKey      = window.env?.API_KEY || "";
 
-    if (!apiKey) {
-      alert("⚠️ API Key não carregada. Verifique o arquivo env.js.");
-    }
+    let sessionId = null;
 
     async function toggleChat() {
       const box = document.getElementById("chatbot-box");
@@ -137,51 +139,77 @@
 
     async function startSession() {
       try {
-        const res = await fetch("/start-session", {
-          method: "POST",
-          headers: { "x-api-key": apiKey }
-        });
-        const data = await res.json();
-        sessionId = data.session_id;
-      } catch (error) {
-        displayMessage("Bot", "Erro ao iniciar sessão. Verifique a chave da API.");
-      }
-    }
-
-    async function sendMessage() {
-      const input = document.getElementById("chatbot-input");
-      const msg = input.value.trim();
-      if (!msg) return;
-
-      displayMessage("Você", msg);
-      input.value = "";
-
-      try {
-        const res = await fetch(backendUrl, {
+        const payload = {
+          company_id: companyId,
+          session_id: "",      // gerado pelo backend
+          message: {
+            channel: "webchat",
+            user_id: userId,
+            sender: "user",
+            text: "",
+            metadata: {}
+          }
+        };
+        const res = await fetch(startUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "x-api-key": apiKey
           },
-          body: JSON.stringify({ session_id: sessionId, message: msg })
+          body: JSON.stringify(payload)
         });
-
-        if (!res.ok) throw new Error("Erro no servidor");
-
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
-        const resposta = data.messages.at(-1).text;
-        displayMessage("Bot", resposta);
-      } catch (error) {
+        sessionId = data.session_id;
+      } catch (err) {
+        displayMessage("Bot", "❌ Erro ao iniciar sessão");
+        console.error(err);
+      }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("chatbot-input");
+      const text  = input.value.trim();
+      if (!text || !sessionId) return;
+
+      displayMessage("Você", text);
+      input.value = "";
+
+      try {
+        const payload = {
+          company_id: companyId,
+          session_id: sessionId,
+          message: {
+            channel: "webchat",
+            user_id: userId,
+            sender: "user",
+            text,
+            metadata: {}
+          }
+        };
+        const res = await fetch(chatUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-api-key": apiKey
+          },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        const data = await res.json();
+        const last = data.messages.at(-1);
+        displayMessage("Bot", last.text);
+      } catch (err) {
         displayMessage("Bot", "❌ Erro ao enviar mensagem");
-        console.error(error);
+        console.error(err);
       }
     }
 
     function displayMessage(sender, text) {
       const area = document.getElementById("chatbot-messages");
-      const div = document.createElement("div");
-      div.innerHTML = `<strong>${sender}:</strong> ${text}`;
-      area.appendChild(div);
+      const msg  = document.createElement("div");
+      msg.innerHTML = `<strong>${sender}:</strong> ${text}`;
+      area.appendChild(msg);
       area.scrollTop = area.scrollHeight;
     }
   </script>

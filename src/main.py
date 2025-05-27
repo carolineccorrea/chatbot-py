@@ -8,6 +8,7 @@ from src.registry import load_adapters
 from src.infra.repositories.mongo_session_repository import MongoSessionRepository
 from src.domain.usecases.create_session_use_case import CreateSessionUseCase
 from src.domain.usecases.process_chat_use_case import ProcessChatUseCase
+from fastapi.staticfiles import StaticFiles
 from src.api.controllers.chat_controller import router as chat_router
 
 logging.basicConfig(level=logging.INFO)
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 app.include_router(chat_router, prefix="/api")
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Log de conexão com MongoDB na inicialização
 @app.on_event("startup")
