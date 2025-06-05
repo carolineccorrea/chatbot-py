@@ -1,7 +1,5 @@
-# src/infra/repositories/mongo_session_repository.py
-
 from datetime import datetime
-from typing import List, Dict, Any
+from typing import List
 from src.domain.models.models import Message
 from src.domain.repositories.session_repository import SessionRepository
 from src.infra.db.mongo.db_config import mongo_db
