@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -17,10 +18,25 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-# Incluir todas as rotas definidas em chat_controller.py sob o prefixo /api
+# ---------------------------------------------------
+# 1) Endpoint mínimo de health (resposta imediata)
+# ---------------------------------------------------
+@app.get("/health")
+async def health_check():
+    """
+    Retorna {"status": "ok", "port": ...} para checagem de readiness.
+    """
+    return {"status": "ok", "port": os.getenv("PORT", "desconhecido")}
+
+
+# ---------------------------------------------------
+# 2) Inclui rotas do chat_controller sob o prefixo /api
+# ---------------------------------------------------
 app.include_router(chat_router, prefix="/api")
 
-# Montar o diretório "static" para servir arquivos estáticos (CSS, JS, HTML, favicon)
+# ---------------------------------------------------
+# 3) Serve arquivos estáticos da pasta "static"
+# ---------------------------------------------------
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
@@ -37,27 +53,47 @@ async def get_widget():
     return FileResponse(caminho, media_type="text/html")
 
 
+# ---------------------------------------------------
+# 4) Startup event: dispara conexão ao Mongo em background
+# ---------------------------------------------------
 @app.on_event("startup")
 async def startup_db():
-    try:
-        await client.server_info()  # forçar conexão
-        logger.info(f"🔗 Conectado ao MongoDB em {MONGO_URI}, banco: {DB_NAME}")
-    except Exception as e:
-        logger.error(f"❌ Falha ao conectar no MongoDB: {e}")
+    """
+    Em vez de usar 'await client.server_info()' de forma síncrona,
+    disparamos uma tarefa em background para não bloquear a abertura da porta.
+    """
+    async def try_connect():
+        try:
+            await client.server_info()  # espera até 5s, pois definimos serverSelectionTimeoutMS=5000
+            logger.info(f"🔗 Conectado ao MongoDB em {MONGO_URI}, banco: {DB_NAME}")
+        except Exception as e:
+            logger.error(f"❌ Falha ao conectar no MongoDB (timeout ou outro): {e}")
+
+    # Dispara a checagem sem await, para que o Uvicorn abra porta imediatamente
+    asyncio.create_task(try_connect())
 
 
+# ---------------------------------------------------
+# 5) Shutdown event: fecha a conexão do Mongo
+# ---------------------------------------------------
 @app.on_event("shutdown")
 async def shutdown_db():
     client.close()
     logger.info("🔒 Conexão com MongoDB encerrada")
 
 
+# ---------------------------------------------------
+# 6) Inicializa dependências para caso de uso
+# ---------------------------------------------------
 adapters = load_adapters()
 repository = MongoSessionRepository()
 create_uc = CreateSessionUseCase(repository)
 process_uc = ProcessChatUseCase(repository)
 
 
+# ---------------------------------------------------
+# 7) Webhook universal (HTTP)
+# ---------------------------------------------------
 @app.post("/api/webhook/{channel}")
 async def universal_webhook(channel: str, request: Request):
     if channel not in adapters:
@@ -73,6 +109,7 @@ async def universal_webhook(channel: str, request: Request):
     if not (company_id and session_id):
         return {"error": "metadata missing company_id or session_id"}, 400
 
+    # Cria sessão no DB, se ainda não existir
     await create_uc.execute(company_id, session_id)
     history = await process_uc.execute(company_id, session_id, msg)
 
@@ -85,8 +122,16 @@ async def universal_webhook(channel: str, request: Request):
     return {"status": "ok"}
 
 
+# ---------------------------------------------------
+# 8) WebSocket endpoint para "webchat"
+# ---------------------------------------------------
 @app.websocket("/ws/{company_id}/{session_id}/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, company_id: str, session_id: str, user_id: str):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    company_id: str,
+    session_id: str,
+    user_id: str
+):
     await websocket.accept()
     adapter = adapters["webchat"]
     adapter.connections[user_id] = websocket
@@ -94,6 +139,7 @@ async def websocket_endpoint(websocket: WebSocket, company_id: str, session_id: 
     try:
         while True:
             data = await websocket.receive_json()
+            # Garante que a metadata contenha company_id e session_id
             data.setdefault("metadata", {}).update({
                 "company_id": company_id,
                 "session_id": session_id
