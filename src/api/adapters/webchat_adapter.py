@@ -1,6 +1,5 @@
-# src/interfaces/websocket/webchat_adapter.py
 from fastapi import WebSocket
-from src.adapters.base_adapter import BaseAdapter
+from src.api.adapters.base_adapter import BaseAdapter
 from src.domain.models.models import Message
 
 connections: dict[str, WebSocket] = {}

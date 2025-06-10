@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 class Message(BaseModel):
@@ -7,6 +7,10 @@ class Message(BaseModel):
     user_id: str                    # identificador único do usuário no canal
     sender: str                     # "user" ou "bot"
     text: str
+    phone_number: Optional[str] = Field(
+        default=None,
+        description="Número de telefone do usuário, se compartilhado"
+    )
     timestamp: datetime = Field(
         default_factory=datetime.utcnow,
         description="UTC de quando a mensagem foi criada"
@@ -17,11 +21,11 @@ class Message(BaseModel):
     )
 
 class ChatRequest(BaseModel):
-    company_id: str                 # identificador da empresa/tenant
+    company_id: str
     session_id: str
     message: Message
 
 class ChatResponse(BaseModel):
-    company_id: str                 # ecoa o mesmo company_id do request
+    company_id: str
     session_id: str
     messages: List[Message]
