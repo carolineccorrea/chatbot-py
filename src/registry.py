@@ -1,7 +1,7 @@
 # src/registry.py
 import importlib
 import yaml
-from src.adapters.base_adapter import BaseAdapter
+from src.api.adapters.base_adapter import BaseAdapter
 
 def load_adapters(config_path: str = "config.yaml") -> dict[str, BaseAdapter]:
     with open(config_path, "r") as f:
