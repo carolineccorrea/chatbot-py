@@ -25,10 +25,16 @@ class MongoSessionRepository(SessionRepository):
         message: Message
     ) -> None:
         filter_doc = {"company_id": company_id, "_id": session_id}
-        update_doc = {"$push": {"messages": message.dict()}}
+        # converte para dict e remove campos None
+        msg_doc = message.dict(exclude_none=True)
+
+        update_ops = {
+            "$push": {"messages": msg_doc}
+        }
+
         result = await mongo_db["sessions"].update_one(
             filter_doc,
-            update_doc,
+            update_ops,
             upsert=True
         )
         print(

@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 from src.domain.models.models import ChatRequest, ChatResponse
 from src.domain.usecases.create_session_use_case import CreateSessionUseCase
 from src.domain.usecases.process_chat_use_case import ProcessChatUseCase
-from src.infra.repositories.mongo_session_repository import MongoSessionRepository
+from src.api.repositories.mongo_session_repository import MongoSessionRepository
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)

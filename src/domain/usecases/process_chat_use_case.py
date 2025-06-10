@@ -1,4 +1,3 @@
-# src/application/use_cases/process_chat_use_case.py
 from datetime import datetime
 from typing import List
 from src.domain.models.models import Message
@@ -17,10 +16,8 @@ class ProcessChatUseCase:
         session_id: str,
         incoming: Message
     ) -> List[Message]:
-        # 1) Recupera histórico
         history = await self.repository.get_messages(company_id, session_id)
 
-        # 2) Limite de mensagens do usuário
         user_msgs = [m for m in history if m.sender == "user"]
         if len(user_msgs) >= MAX_USER_MESSAGES_PER_SESSION:
             fallback = Message(
@@ -31,12 +28,11 @@ class ProcessChatUseCase:
                 timestamp=datetime.utcnow(),
                 metadata={}
             )
-            return [*history, fallback]
+            await self.repository.add_message(company_id, session_id, fallback)
+            return await self.repository.get_messages(company_id, session_id)
 
-        # 3) Persiste mensagem do usuário
         await self.repository.add_message(company_id, session_id, incoming)
 
-        # 4) Gera resposta via RAG/LLM
         try:
             result = ask_with_context(incoming.text, session_id)
             reply_text = result.get("answer", "")
@@ -51,8 +47,7 @@ class ProcessChatUseCase:
             timestamp=datetime.utcnow(),
             metadata={}
         )
-        # 5) Persiste resposta do bot
+
         await self.repository.add_message(company_id, session_id, bot_msg)
 
-        # 6) Retorna histórico atualizado
         return await self.repository.get_messages(company_id, session_id)
