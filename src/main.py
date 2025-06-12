@@ -31,7 +31,7 @@ BOT_TOKEN        = os.getenv("TELEGRAM_BOT_TOKEN")
 WEBHOOK_URL      = os.getenv("TELEGRAM_WEBHOOK_URL")
 MONGODB_URI      = os.getenv("MONGODB_URI")
 MONGODB_DB_NAME  = os.getenv("MONGODB_DB_NAME", "")
-PORT             = int(os.getenv("PORT", 8000))
+PORT             = int(os.getenv("PORT", 8080))
 
 if not BOT_TOKEN:
     raise RuntimeError("💥 TELEGRAM_BOT_TOKEN não definido")
